@@ -15,11 +15,42 @@ print_blue() { echo -e "\033[34m$1\033[0m"; }
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DATASETS_DIR="${SCRIPT_DIR}/downloaded_datasets"
+
+# Allow overriding the download directory with:
+# 1) command-line: --dest /path/to/dir or -d /path/to/dir
+# 2) environment variable: DOWNLOADS_DIR
+# Default: a `downloaded_datasets` folder next to this script
+DATASETS_DIR=""
+while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+        -d|--dest)
+            DATASETS_DIR="$2"
+            shift 2
+            ;;
+        -h|--help)
+            echo "Usage: $(basename "$0") [--dest PATH]"
+            echo "If --dest is not provided, environment variable DOWNLOADS_DIR is checked."
+            echo "Default: <script_dir>/downloaded_datasets"
+            exit 0
+            ;;
+        --) shift; break ;;
+        *) break ;;
+    esac
+done
+
+if [ -z "$DATASETS_DIR" ]; then
+    if [ -n "$DOWNLOADS_DIR" ]; then
+        DATASETS_DIR="$DOWNLOADS_DIR"
+    else
+        DATASETS_DIR="${SCRIPT_DIR}/downloaded_datasets"
+    fi
+fi
+
 LOG_FILE="${DATASETS_DIR}/download.log"
 
 print_blue "=== Multi-Dataset Download Script ==="
 print_blue "This script will download 7 computer vision datasets"
+print_blue "Destination directory: ${DATASETS_DIR}"
 print_blue "Estimated total size: ~5TB (depending on selections)"
 print_blue "=========================================="
 
@@ -39,12 +70,12 @@ setup_conda_env() {
         # Create conda environment for downloads
         if ! conda env list | grep -q "^dataset_download"; then
             log_message "Creating conda environment: dataset_download"
-            conda create -n dataset_download python=3.8 -y
+            conda create --prefix /mnt/sdd/conda_env/expended_dataset_pipeline python=3.11 -y
         fi
         
         # Activate environment
         source "$(conda info --base)/etc/profile.d/conda.sh"
-        conda activate dataset_download
+        conda activate /mnt/sdd/conda_env/expended_dataset_pipeline
         
         # Install required packages
         log_message "Installing required packages..."
