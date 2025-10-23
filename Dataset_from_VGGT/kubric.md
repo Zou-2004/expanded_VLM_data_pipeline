@@ -1,0 +1,1 @@
+https://console.cloud.google.com/storage/browser/kubric-public;tab=objects?prefix=&forceOnObjectsSortingFiltering=false

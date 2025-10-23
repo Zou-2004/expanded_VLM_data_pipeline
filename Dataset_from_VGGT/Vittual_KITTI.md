@@ -1,0 +1,1 @@
+wget https://www.vision.rwth-aachen.de/media/resource_files/vkitti3d_dataset_v2.0.zip
