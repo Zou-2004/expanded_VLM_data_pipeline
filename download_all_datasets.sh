@@ -68,14 +68,14 @@ setup_conda_env() {
         print_green "Conda found. Setting up environment..."
         
         # Create conda environment for downloads
-        if ! conda env list | grep -q "^dataset_download"; then
-            log_message "Creating conda environment: dataset_download"
-            conda create --prefix /mnt/sdd/conda_env/expended_dataset_pipeline python=3.11 -y
+        if ! conda env list | grep -q "^expended_dataset_pipeline"; then
+            log_message "Creating conda environment: expended_dataset_pipeline"
+            conda create -n expended_dataset_pipeline python=3.11 -y
         fi
         
         # Activate environment
         source "$(conda info --base)/etc/profile.d/conda.sh"
-        conda activate /mnt/sdd/conda_env/expended_dataset_pipeline
+        conda activate expended_dataset_pipeline
         
         # Install required packages
         log_message "Installing required packages..."
