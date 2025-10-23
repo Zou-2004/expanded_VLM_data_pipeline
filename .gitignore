@@ -1,0 +1,68 @@
+# Dataset Downloads - Ignore all downloaded data
+downloaded_datasets/
+*.zip
+*.tar.gz
+*.7z
+*.rar
+
+# Dataset folders - Ignore actual dataset content
+BlendedMVS/
+ml-hypersim/
+tartanair_tools/data/
+taskonomy/
+DynamicReplica/
+IRs/
+Structured3D/
+TartanAir/
+Taskonomy/
+
+# Log files
+*.log
+download.log
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Virtual environments
+venv/
+env/
+.env
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# System files
+.directory
+desktop.ini
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Large data files
+*.hdf5
+*.h5
+*.pfm
+*.exr
+*.npy
+
+# Only keep the essential files
+!README.md
+!download_all_datasets.sh
+!*.md
