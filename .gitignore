@@ -1,5 +1,6 @@
 # Dataset Downloads - Ignore all downloaded data
 downloaded_datasets/
+vggt_datasets/
 *.zip
 *.tar.gz
 *.7z
@@ -8,13 +9,18 @@ downloaded_datasets/
 # Dataset folders - Ignore actual dataset content
 BlendedMVS/
 ml-hypersim/
-tartanair_tools/data/
+tartanair_tools/
 taskonomy/
 DynamicReplica/
 IRs/
 Structured3D/
 TartanAir/
 Taskonomy/
+
+# External repositories (cloned by scripts)
+Dataset_from_VGGT/Replica-Dataset/
+Dataset_from_VGGT/co3d/
+Dataset_from_VGGT/wildrgbd/
 
 # Log files
 *.log
