@@ -149,6 +149,46 @@ download_from_gdrive() {
     print_green "Downloading from Google Drive: $description"
     log_message "Downloading Google Drive file: $file_id -> $output_file"
     
+    gdown "https://drive.google.com/uc?id=${file_id}" -O "$output_file" --fuzzy
+    
+    if [ $? -eq 0 ]; then
+        print_green "✓ Successfully downloaded: $description"
+        return 0
+    else
+        print_red "✗ Failed to download: $description"
+        return 1
+    fi
+}
+
+# Function to download with axel (parallel) or fallback to wget/curl
+download_with_axel() {
+    local url="$1"
+    local output="$2"
+    local connections="${3:-16}"  # Default 16 connections
+    
+    # Try axel first for parallel downloading
+    if command -v axel &> /dev/null; then
+        print_green "Using axel with ${connections} parallel connections"
+        axel -n "${connections}" -a -o "${output}" "${url}"
+        if [ $? -eq 0 ]; then
+            return 0
+        else
+            print_yellow "Axel failed, falling back to wget/curl"
+        fi
+    fi
+    
+    # Fall back to wget or curl
+    if command -v wget &> /dev/null; then
+        wget --continue --show-progress -O "${output}" "${url}"
+    elif command -v curl &> /dev/null; then
+        curl -L -C - --progress-bar -o "${output}" "${url}"
+    else
+        print_red "Neither axel, wget, nor curl is available"
+        print_yellow "Install: sudo apt-get install axel wget curl"
+        return 1
+    fi
+}
+    
     if command -v gdown &> /dev/null; then
         gdown "https://drive.google.com/uc?id=$file_id" -O "$output_file" 2>&1 | tee -a "${LOG_FILE}"
     else
@@ -242,14 +282,14 @@ download_dynamic_replica() {
     
     # Download real data
     print_green "Downloading DynamicReplica real data..."
-    download_with_progress "${base_url}/real/real_000.zip" "${dr_dir}/real_000.zip" "Real data"
+    download_with_axel "${base_url}/real/real_000.zip" "${dr_dir}/real_000.zip" 16
     extract_if_needed "${dr_dir}/real_000.zip" "${dr_dir}"
     
     # Download validation data
     print_green "Downloading DynamicReplica validation data..."
     for i in {0..5}; do
         local file_num=$(printf "%03d" $i)
-        download_with_progress "${base_url}/valid/valid_${file_num}.zip" "${dr_dir}/valid_${file_num}.zip" "Validation ${file_num}"
+        download_with_axel "${base_url}/valid/valid_${file_num}.zip" "${dr_dir}/valid_${file_num}.zip" 12
         extract_if_needed "${dr_dir}/valid_${file_num}.zip" "${dr_dir}"
     done
     
@@ -257,7 +297,7 @@ download_dynamic_replica() {
     print_green "Downloading DynamicReplica test data..."
     for i in {0..10}; do
         local file_num=$(printf "%03d" $i)
-        download_with_progress "${base_url}/test/test_${file_num}.zip" "${dr_dir}/test_${file_num}.zip" "Test ${file_num}"
+        download_with_axel "${base_url}/test/test_${file_num}.zip" "${dr_dir}/test_${file_num}.zip" 12
         extract_if_needed "${dr_dir}/test_${file_num}.zip" "${dr_dir}"
     done
     
@@ -265,7 +305,7 @@ download_dynamic_replica() {
     print_green "Downloading DynamicReplica training data (ALL 86 files)..."
     for i in {0..85}; do
         local file_num=$(printf "%03d" $i)
-        download_with_progress "${base_url}/train/train_${file_num}.zip" "${dr_dir}/train_${file_num}.zip" "Train ${file_num}"
+        download_with_axel "${base_url}/train/train_${file_num}.zip" "${dr_dir}/train_${file_num}.zip" 12
         extract_if_needed "${dr_dir}/train_${file_num}.zip" "${dr_dir}"
     done
     
@@ -333,47 +373,47 @@ download_structured3d() {
     
     local base_url="https://zju-kjl-jointlab-azure.kujiale.com/zju-kjl-jointlab/Structured3D"
     
-    # Download panorama data
+    # Download panorama data (using axel with 16 connections for large files)
     print_green "Downloading Structured3D panorama data..."
     for i in {0..17}; do
         local file_num=$(printf "%02d" $i)
-        download_with_progress "${base_url}/Structured3D_panorama_${file_num}.zip" \
-            "${s3d_dir}/Structured3D_panorama_${file_num}.zip" "Panorama ${file_num}"
+        download_with_axel "${base_url}/Structured3D_panorama_${file_num}.zip" \
+            "${s3d_dir}/Structured3D_panorama_${file_num}.zip" 16
         extract_if_needed "${s3d_dir}/Structured3D_panorama_${file_num}.zip" "${s3d_dir}"
     done
     
-    # Download perspective FULL data (not just empty)
+    # Download perspective FULL data (not just empty) - using axel
     print_green "Downloading Structured3D perspective FULL data..."
     for i in {0..17}; do
         if [ $i -ne 9 ]; then  # Skip corrupted file 09
             local file_num=$(printf "%02d" $i)
-            download_with_progress "${base_url}/Structured3D_perspective_full_${file_num}.zip" \
-                "${s3d_dir}/Structured3D_perspective_full_${file_num}.zip" "Perspective Full ${file_num}"
+            download_with_axel "${base_url}/Structured3D_perspective_full_${file_num}.zip" \
+                "${s3d_dir}/Structured3D_perspective_full_${file_num}.zip" 16
             extract_if_needed "${s3d_dir}/Structured3D_perspective_full_${file_num}.zip" "${s3d_dir}"
         fi
     done
     
-    # Also download perspective empty data
+    # Also download perspective empty data - using axel
     print_green "Downloading Structured3D perspective empty data..."
     for i in {0..17}; do
         if [ $i -ne 9 ]; then  # Skip corrupted file 09
             local file_num=$(printf "%02d" $i)
-            download_with_progress "${base_url}/Structured3D_perspective_empty_${file_num}.zip" \
-                "${s3d_dir}/Structured3D_perspective_empty_${file_num}.zip" "Perspective Empty ${file_num}"
+            download_with_axel "${base_url}/Structured3D_perspective_empty_${file_num}.zip" \
+                "${s3d_dir}/Structured3D_perspective_empty_${file_num}.zip" 16
             extract_if_needed "${s3d_dir}/Structured3D_perspective_empty_${file_num}.zip" "${s3d_dir}"
         fi
     done
     
-    # Download structure annotations (missing from previous version)
+    # Download structure annotations (missing from previous version) - using axel
     print_green "Downloading Structured3D structure annotations..."
-    download_with_progress "${base_url}/Structured3D_annotation_3d.zip" \
-        "${s3d_dir}/Structured3D_annotation_3d.zip" "Structure Annotations"
+    download_with_axel "${base_url}/Structured3D_annotation_3d.zip" \
+        "${s3d_dir}/Structured3D_annotation_3d.zip" 16
     extract_if_needed "${s3d_dir}/Structured3D_annotation_3d.zip" "${s3d_dir}"
     
-    # Download 3D bounding box annotations
+    # Download 3D bounding box annotations - using axel
     print_green "Downloading Structured3D bounding box annotations..."
-    download_with_progress "${base_url}/Structured3D_bbox.zip" \
-        "${s3d_dir}/Structured3D_bbox.zip" "3D Bounding Boxes"
+    download_with_axel "${base_url}/Structured3D_bbox.zip" \
+        "${s3d_dir}/Structured3D_bbox.zip" 16
     extract_if_needed "${s3d_dir}/Structured3D_bbox.zip" "${s3d_dir}"
     
     log_message "Structured3D download completed"
